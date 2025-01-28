@@ -125,6 +125,48 @@ class Menu:
             except Exception as e:
                 print(f"Error {e}")
 
+    def registrar_cliente(self):
+        """ Registrar un cliente en el sistema """
+        print("\n --- Registra un nuevo cliente ---")
+        # Validar el nombre 
+        while True:
+            try:
+
+                nombre = input("Nombre del ciente: ").strip()
+                if not nombre:
+                    raise ValueError("El nombre no puede estar vacío")
+                if len(nombre) < 3:
+                    raise ValueError('El nombre debe tener al menos 3 caracteres')
+                break 
+            except ValueError as e:
+                print(f'El error fue {e}, intente de nuevo')
+
+        while True:
+            try:
+                contacto = input("Ingrese su contacto: ").strip()
+                if not contacto:
+                    raise ValueError('El contacto no puede estar vacío')
+                if len(contacto) < 5:
+                    raise ValueError('El contacto debe tener al menos 5 caracteres')
+                break
+            except ValueError as e:
+                print(f'El error fue {e}, intente de nuevo')
+        
+        while True:
+            try:
+                direccion = input("Ingrese su dirección: ").strip()
+                if not direccion:
+                    raise ValueError('La dirección no puede estar vacía')
+                if len(direccion) < 5:
+                    raise ValueError('La dirección debe tener al menos 5 caracteres')
+                break
+            except ValueError as e:
+                print(f'El error fue {e}, intente de nuevo')
+
+        nuevo_cliente = Cliente(nombre, contacto, direccion)
+        self.veterinaria.clientes.append(nuevo_cliente)
+        print(f'Cliente {nuevo_cliente.nombre} registrado exitosamente!')
+
     def ejecutar(self):
         """Ejecución principal """
         while True:
@@ -132,7 +174,8 @@ class Menu:
             opcion = self.seleccionar_opcion()
             print(opcion)
             if opcion == "1":
-                pass
+                self.registrar_cliente()
+                
             elif opcion == "6":
                 print("Saliendo del sistema")
                 sys.exit()
