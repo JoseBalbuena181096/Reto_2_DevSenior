@@ -10,6 +10,7 @@ from typing import List
 from enum import Enum
 from datetime import datetime
 import sys
+from prettytable import PrettyTable
 
 # ---------- Clase para la veterinaria ---------------
 class Veterinaria:
@@ -54,6 +55,9 @@ class Cliente(Persona):
         
     def agregar_mascota(self, mascota):
         self.mascotas.append(mascota)
+
+    def __str__(self):
+        return f'Nombre: {self.nombre} - Direccion: {self.contacto}'
 
 class Veterinario(Persona):
     def __init__(self, nombre: str, contacto: str, direccion: str, especialidad: str):
@@ -167,6 +171,85 @@ class Menu:
         self.veterinaria.clientes.append(nuevo_cliente)
         print(f'Cliente {nuevo_cliente.nombre} registrado exitosamente!')
 
+    def registrar_mascota(self):
+        """ Registrar una mascota en el sistema """
+        print("\n --- Registra una nueva mascota ---")
+
+        # Validaciones
+        cliente = self.seleccionar_cliente()
+        if not cliente:
+            return 
+            
+        while True:
+            try:
+                nombre = input("Nombre de la mascota: ").strip()
+                if not nombre:
+                    raise ValueError("El nombre no puede estar vacío")
+                if len(nombre) < 3:
+                    raise ValueError('El nombre debe tener al menos 3 caracteres')
+                break 
+            except ValueError as e:
+                print(f'El error fue {e}, intente de nuevo')
+
+        while True:
+            try:
+                especie = input("Ingrese su especie: ").strip()
+                if not especie:
+                    raise ValueError('La especie no puede estar vacía')
+                if len(especie) < 3:
+                    raise ValueError('La especie debe tener al menos 3 caracteres')
+                break
+            except ValueError as e:
+                print(f'El error fue {e}, intente de nuevo')
+        
+        while True:
+            try:
+                raza = input("Ingrese su raza: ").strip()
+                if not raza:
+                    raise ValueError('La raza no puede estar vacía')
+                if len(raza) < 3:
+                    raise ValueError('La raza debe tener al menos 3 caracteres')
+                break
+            except ValueError as e:
+                print(f'El error fue {e}, intente de nuevo')
+
+        while True:
+            try:
+                edad = int(input("Ingrese la edad: ").strip())
+                break
+            except ValueError as e:
+                print(f"El error es {e}")
+
+        nueva_mascota = Mascota(nombre, especie, raza, edad, cliente)
+        cliente.agregar_mascota(nueva_mascota)
+        print(f'Mascota {nombre} registrada exitosamente! ')
+
+    # Métodos auxiliares 
+
+    def seleccionar_cliente(self):
+        """Mostrar la lista de clientes y permitir seleccionar uno """
+        if not self.veterinaria.clientes:
+            print('No tienes clientes')
+            return None
+        tabla = PrettyTable()
+        # Definir columnas
+        print("\nClientes disponibles:")
+        tabla.field_names = ["ID", "Nombre"]
+        for id_, cliente in enumerate(self.veterinaria.clientes, start=1):
+            tabla.add_row([f'{id_}', f'{cliente.nombre}'])
+            tabla.add_row([f' ',f' '])
+        print(tabla)
+
+        try:
+            seleccion = int(input("Seleccione un cliente: ")) - 1
+            if seleccion >= 0 and seleccion < len(self.veterinaria.clientes):
+                return self.veterinaria.clientes[seleccion]
+            raise ValueError('Ingrese un cliente valido')
+        except (ValueError, IndexError) as e:
+            print(f"Selección inválida: {e}")
+            return None
+        
+
     def ejecutar(self):
         """Ejecución principal """
         while True:
@@ -175,6 +258,8 @@ class Menu:
             print(opcion)
             if opcion == "1":
                 self.registrar_cliente()
+            if opcion == "2":
+                self.registrar_mascota()
                 
             elif opcion == "6":
                 print("Saliendo del sistema")
