@@ -119,9 +119,9 @@ class Menu:
             try: # Verificar si es numerica
                 if not entrada.isdigit():
                     raise Exception("La entrada no es un número válido.")
-                if  int(entrada) in list(range(1,7)):
+                if  entrada in self.opciones_validas:
                     return entrada
-                print(f"Opción inválida. Válidas: {', '.join(list(range(1,7)))}")
+                print(f"Opción inválida. Válidas: {self.opciones_validas}")
             except Exception as e:
                 print(f"Error {e}")
 
