@@ -99,6 +99,9 @@ class Mascota:
     def agregar_cita(self, cita: Cita):
         self.historial.append(cita)
 
+    def __str__(self):
+        return f'Nombre: {self.nombre} - Especie {self.especie} - Raza {self.raza}'
+
 # ------- Menu y validación de datos ---------------
 
 class Menu:
@@ -224,6 +227,13 @@ class Menu:
         cliente.agregar_mascota(nueva_mascota)
         print(f'Mascota {nombre} registrada exitosamente! ')
 
+    def programar_cita(self):
+        """ Programar una cita """
+        cliente = self.seleccionar_cliente()
+        mascota = self.seleccionar_mascota(cliente)
+        print(mascota) 
+
+
     # Métodos auxiliares 
 
     def seleccionar_cliente(self):
@@ -249,6 +259,29 @@ class Menu:
             print(f"Selección inválida: {e}")
             return None
         
+    def seleccionar_mascota(self, cliente:Cliente):
+        """ Muestra mascotas de un cliente y permite seleccionar una """
+        if not cliente.mascotas:
+            print("Este cliente no tiene mascotas")
+            return None
+        tabla = PrettyTable()
+        # Definir columnas
+        print(f"\nMascotas de {cliente.nombre}: ")
+        tabla.field_names = ["ID", "Nombre", f'Especie']
+        for id_, mascota in enumerate(cliente.mascotas, start=1):
+            tabla.add_row([f'{id_}', f'{mascota.nombre}', f'{mascota.especie}'])
+            tabla.add_row([f' ',f' ',f' '])
+        print(tabla)
+
+        try:
+            seleccion = int(input("Seleccione una mascota: ")) - 1
+            if seleccion >= 0 and seleccion < len(cliente.mascotas):
+                return cliente.mascotas[seleccion]
+            raise ValueError('Ingrese una mascota valida')
+        except (ValueError, IndexError) as e:
+            print(f"Selección inválida: {e}")
+            return None
+
 
     def ejecutar(self):
         """Ejecución principal """
@@ -258,9 +291,10 @@ class Menu:
             print(opcion)
             if opcion == "1":
                 self.registrar_cliente()
-            if opcion == "2":
+            elif opcion == "2":
                 self.registrar_mascota()
-                
+            elif opcion == "3":
+                self.programar_cita() 
             elif opcion == "6":
                 print("Saliendo del sistema")
                 sys.exit()
