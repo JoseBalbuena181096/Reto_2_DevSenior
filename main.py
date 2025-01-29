@@ -63,6 +63,9 @@ class Veterinario(Persona):
     def __init__(self, nombre: str, contacto: str, direccion: str, especialidad: str):
         super().__init__(nombre, contacto, direccion)
         self.especialidad = especialidad
+    
+    def __str__(self):
+        return f'Nombre: {self.nombre} - especialidad {self.especialidad}'  
 
 # ------- Clases para el servicio y citas ----------
 
@@ -83,7 +86,6 @@ class Cita:
         self.fecha = fecha
         self.veterinario = veterinario
         self.servicio = servicio
-
 
 
 # ------- Clase para la mascota --------------------
@@ -107,7 +109,7 @@ class Mascota:
 class Menu:
     def __init__(self):
         self.veterinaria = Veterinaria()
-        self.opciones_validas = ["1", "2", "3", "4", "5", "6"]
+        self.opciones_validas = ["1", "2", "3", "4", "5", "6", "7"]
 
     def mostrar_menu(self):
         """Mostrar las opciones del sistema """
@@ -117,7 +119,8 @@ class Menu:
         print("3. Programar Cita")
         print("4. Consultar Historial de Mascota")
         print("5. Listar Todos los Clientes")
-        print("6. Salir")
+        print("6. Registrar Veterinario")
+        print("7. Salir")
 
     def seleccionar_opcion(self):
         """ Gestiona la seleccion de opcion del usuario """
@@ -139,7 +142,7 @@ class Menu:
         while True:
             try:
 
-                nombre = input("Nombre del ciente: ").strip()
+                nombre = input("Nombre del cliente: ").strip()
                 if not nombre:
                     raise ValueError("El nombre no puede estar vacío")
                 if len(nombre) < 3:
@@ -173,6 +176,59 @@ class Menu:
         nuevo_cliente = Cliente(nombre, contacto, direccion)
         self.veterinaria.clientes.append(nuevo_cliente)
         print(f'Cliente {nuevo_cliente.nombre} registrado exitosamente!')
+
+    def registrar_veterinario(self):
+        """ Registrar un veterinario en el sistema """
+        print("\n --- Registra un nuevo veterinario ---")
+        # Validar el nombre 
+        while True:
+            try:
+
+                nombre = input("Nombre del veterinario: ").strip()
+                if not nombre:
+                    raise ValueError("El nombre no puede estar vacío")
+                if len(nombre) < 3:
+                    raise ValueError('El nombre debe tener al menos 3 caracteres')
+                break 
+            except ValueError as e:
+                print(f'El error fue {e}, intente de nuevo')
+
+        while True:
+            try:
+                contacto = input("Ingrese su contacto: ").strip()
+                if not contacto:
+                    raise ValueError('El contacto no puede estar vacío')
+                if len(contacto) < 5:
+                    raise ValueError('El contacto debe tener al menos 5 caracteres')
+                break
+            except ValueError as e:
+                print(f'El error fue {e}, intente de nuevo')
+        
+        while True:
+            try:
+                direccion = input("Ingrese su dirección: ").strip()
+                if not direccion:
+                    raise ValueError('La dirección no puede estar vacía')
+                if len(direccion) < 5:
+                    raise ValueError('La dirección debe tener al menos 5 caracteres')
+                break
+            except ValueError as e:
+                print(f'El error fue {e}, intente de nuevo')
+
+        while True:
+            try:
+                especialidad = input("Ingrese su especialidad: ").strip()
+                if not especialidad:
+                    raise ValueError('La especialidad no puede estar vacía')
+                if len(especialidad) < 5:
+                    raise ValueError('La especialidad debe tener al menos 5 caracteres')
+                break
+            except ValueError as e:
+                print(f'El error fue {e}, intente de nuevo')
+
+        nuevo_veterinario = Veterinario(nombre, contacto, direccion, especialidad)
+        self.veterinaria.veterinarios.append(nuevo_veterinario)
+        print(f'Veterinario {nuevo_veterinario.nombre} {nuevo_veterinario.especialidad} registrado exitosamente!')
 
     def registrar_mascota(self):
         """ Registrar una mascota en el sistema """
@@ -231,8 +287,9 @@ class Menu:
         """ Programar una cita """
         cliente = self.seleccionar_cliente()
         mascota = self.seleccionar_mascota(cliente)
-        print(mascota) 
-
+        veterinario = self.seleccionar_veterinario()
+        print(mascota)
+        print(veterinario) 
 
     # Métodos auxiliares 
 
@@ -282,6 +339,28 @@ class Menu:
             print(f"Selección inválida: {e}")
             return None
 
+    def seleccionar_veterinario(self):
+        """Mostrar la lista de veterinarios y permitir seleccionar uno """
+        if not self.veterinaria.veterinarios:
+            print('No tienes veterinarios')
+            return None
+        tabla = PrettyTable()
+        # Definir columnas
+        print("\nVeterinarios disponibles:")
+        tabla.field_names = ["ID", "Nombre", "Especialidad"]
+        for id_, veterinario in enumerate(self.veterinaria.veterinarios, start=1):
+            tabla.add_row([f'{id_}', f'{veterinario.nombre}', f'{veterinario.especialidad}'])
+            tabla.add_row([f' ',f' ', f' '])
+        print(tabla)
+
+        try:
+            seleccion = int(input("Seleccione un veterinario: ")) - 1
+            if seleccion >= 0 and seleccion < len(self.veterinaria.veterinarios):
+                return self.veterinaria.veterinarios[seleccion]
+            raise ValueError('Ingrese un veterinario valido')
+        except (ValueError, IndexError) as e:
+            print(f"Selección inválida: {e}")
+            return None
 
     def ejecutar(self):
         """Ejecución principal """
@@ -294,8 +373,10 @@ class Menu:
             elif opcion == "2":
                 self.registrar_mascota()
             elif opcion == "3":
-                self.programar_cita() 
+                self.programar_cita()
             elif opcion == "6":
+                self.registrar_veterinario()    
+            elif opcion == "7":
                 print("Saliendo del sistema")
                 sys.exit()
 
