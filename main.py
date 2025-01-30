@@ -141,9 +141,9 @@ class Menu:
         """ Registrar un cliente en el sistema """
         print("\n --- Registra un nuevo cliente ---")
         # Validar el nombre 
+        i = 0
         while True:
             try:
-
                 nombre = input("Nombre del cliente: ").strip()
                 if not nombre:
                     raise ValueError("El nombre no puede estar vacío")
@@ -153,6 +153,12 @@ class Menu:
             except ValueError as e:
                 print(f'El error fue {e}, intente de nuevo')
 
+            i += 1
+            if i>= 3:
+                print("Demasiados intentos regresando... ")
+                return
+
+        i = 0
         while True:
             try:
                 contacto = input("Ingrese su contacto: ").strip()
@@ -163,7 +169,13 @@ class Menu:
                 break
             except ValueError as e:
                 print(f'El error fue {e}, intente de nuevo')
-        
+
+            i += 1
+            if i>= 3:
+                print("Demasiados intentos regresando... ")
+                return
+
+        i = 0
         while True:
             try:
                 direccion = input("Ingrese su dirección: ").strip()
@@ -174,6 +186,11 @@ class Menu:
                 break
             except ValueError as e:
                 print(f'El error fue {e}, intente de nuevo')
+           
+            i += 1
+            if i>= 3:
+                print("Demasiados intentos regresando... ")
+                return
 
         nuevo_cliente = Cliente(nombre, contacto, direccion)
         self.veterinaria.clientes.append(nuevo_cliente)
@@ -183,6 +200,7 @@ class Menu:
         """ Registrar un veterinario en el sistema """
         print("\n --- Registra un nuevo veterinario ---")
         # Validar el nombre 
+        i = 0
         while True:
             try:
 
@@ -194,7 +212,12 @@ class Menu:
                 break 
             except ValueError as e:
                 print(f'El error fue {e}, intente de nuevo')
+            i += 1
+            if i>= 3:
+                print("Demasiados intentos regresando... ")
+                return
 
+        i = 0
         while True:
             try:
                 contacto = input("Ingrese su contacto: ").strip()
@@ -205,7 +228,12 @@ class Menu:
                 break
             except ValueError as e:
                 print(f'El error fue {e}, intente de nuevo')
-        
+            i += 1
+            if i>= 3:
+                print("Demasiados intentos regresando... ")
+                return
+
+        i = 0
         while True:
             try:
                 direccion = input("Ingrese su dirección: ").strip()
@@ -216,7 +244,12 @@ class Menu:
                 break
             except ValueError as e:
                 print(f'El error fue {e}, intente de nuevo')
+            i += 1
+            if i>= 3:
+                print("Demasiados intentos regresando... ")
+                return
 
+        i = 0
         while True:
             try:
                 especialidad = input("Ingrese su especialidad: ").strip()
@@ -227,6 +260,10 @@ class Menu:
                 break
             except ValueError as e:
                 print(f'El error fue {e}, intente de nuevo')
+            i += 1
+            if i>= 3:
+                print("Demasiados intentos regresando... ")
+                return
 
         nuevo_veterinario = Veterinario(nombre, contacto, direccion, especialidad)
         self.veterinaria.veterinarios.append(nuevo_veterinario)
@@ -234,13 +271,14 @@ class Menu:
 
     def registrar_mascota(self):
         """ Registrar una mascota en el sistema """
-        print("\n --- Registra una nueva mascota ---")
 
+        print("\n --- Registra una nueva mascota ---")
         # Validaciones
         cliente = self.seleccionar_cliente()
         if not cliente:
             return 
-            
+    
+        i = 0    
         while True:
             try:
                 nombre = input("Nombre de la mascota: ").strip()
@@ -251,7 +289,12 @@ class Menu:
                 break 
             except ValueError as e:
                 print(f'El error fue {e}, intente de nuevo')
-
+            i += 1
+            if i>= 3:
+                print("Demasiados intentos regresando... ")
+                return
+        
+        i = 0
         while True:
             try:
                 especie = input("Ingrese su especie: ").strip()
@@ -262,7 +305,12 @@ class Menu:
                 break
             except ValueError as e:
                 print(f'El error fue {e}, intente de nuevo')
-        
+            i += 1
+            if i>= 3:
+                print("Demasiados intentos regresando... ")
+                return
+
+        i = 0
         while True:
             try:
                 raza = input("Ingrese su raza: ").strip()
@@ -273,13 +321,22 @@ class Menu:
                 break
             except ValueError as e:
                 print(f'El error fue {e}, intente de nuevo')
+            i += 1
+            if i>= 3:
+                print("Demasiados intentos regresando... ")
+                return
 
+        i  = 0
         while True:
             try:
                 edad = int(input("Ingrese la edad: ").strip())
                 break
             except ValueError as e:
                 print(f"El error es {e}")
+            i += 1
+            if i>= 3:
+                print("Demasiados intentos regresando... ")
+                return
 
         nueva_mascota = Mascota(nombre, especie, raza, edad, cliente)
         cliente.agregar_mascota(nueva_mascota)
