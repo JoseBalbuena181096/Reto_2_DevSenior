@@ -285,11 +285,47 @@ class Menu:
 
     def programar_cita(self):
         """ Programar una cita """
+        print("\n---- Programar Nueva Cita ----")
         cliente = self.seleccionar_cliente()
+        if not cliente:
+            return
+        
         mascota = self.seleccionar_mascota(cliente)
+        if not mascota:
+            return
+
         veterinario = self.seleccionar_veterinario()
-        print(mascota)
-        print(veterinario) 
+        if not veterinario:
+            return
+
+        fecha_str = input("Feha y hora (DD/MM/AAAA HH:MM): ").strip()
+        try:
+            fecha = datetime.strptime(fecha_str, "%d/%m/%Y %H:%M")
+        except ValueError:
+            print('Formato de fecha inválido, Use DD/MM/AAAA HH:MM')
+            return
+
+        tabla = PrettyTable()
+        # Definir columnas
+        print("\nServicios disponibles: ")
+        tabla.field_names = ["ID", "Nombre"]
+        for id_, servicio in enumerate(Servicio.listar(), start=1):
+            tabla.add_row([f'{id_}', f'{servicio}'])
+            tabla.add_row([f' ',f' '])
+        print(tabla)
+
+        try:
+            seleccion = int(input("Seleccione servicio: ")) - 1
+            servicio = Servicio(Servicio.listar()[seleccion])
+        except (ValueError, IndexError):
+            print("Selección inválida")
+            return
+
+        nueva_cita = Cita(mascota, fecha, veterinario, servicio)
+        mascota.agregar_cita(nueva_cita)
+        self.veterinaria.citas.append(nueva_cita)
+        print(f'Cita programada para {mascota.nombre} el {fecha_str}')
+                
 
     # Métodos auxiliares 
 
