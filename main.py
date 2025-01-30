@@ -135,6 +135,8 @@ class Menu:
             except Exception as e:
                 print(f"Error {e}")
 
+    # Métodos principales
+
     def registrar_cliente(self):
         """ Registrar un cliente en el sistema """
         print("\n --- Registra un nuevo cliente ---")
@@ -354,6 +356,27 @@ class Menu:
             tabla.add_row([f' ',f' ',f' ',f' '])
         print(tabla)        
 
+    def listar_clientes(self):
+        """ Muestra todos los clientes con sus mascotas """
+        print("\n---- Listado de Clientes ----")
+        if not self.veterinaria.clientes:
+            print('No hay clientes que mostrar')
+            return
+        tabla = PrettyTable()
+        # Definir columnas
+        print("\nClientes disponibles:")
+        tabla.field_names = ["ID", "Nombre", "Contacto", f"Mascotas"]
+        for id_, cliente in enumerate(self.veterinaria.clientes, start=1):
+            tabla.add_row([
+                    f'{id_}', 
+                    f'{cliente.nombre}',
+                    f'{cliente.contacto}',
+                    f'{"\n".join(map(lambda mascota: mascota.nombre, cliente.mascotas))}'
+                ])
+            tabla.add_row([f' ',f' ',f' ',f' '])
+        print(tabla)
+
+
     # Métodos auxiliares 
     def seleccionar_cliente(self):
         """Mostrar la lista de clientes y permitir seleccionar uno """
@@ -438,6 +461,8 @@ class Menu:
                 self.programar_cita()
             elif opcion == "4":
                 self.consultar_historial()
+            elif opcion == "5":
+                self.listar_clientes()
             elif opcion == "6":
                 self.registrar_veterinario()    
             elif opcion == "7":
