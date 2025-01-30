@@ -326,9 +326,35 @@ class Menu:
         self.veterinaria.citas.append(nueva_cita)
         print(f'Cita programada para {mascota.nombre} el {fecha_str}')
                 
+    def consultar_historial(self):
+        """ Muestra el historial médico de una mascota """
+        print("\n---- Conusltar Historial ----")
+        cliente = self.seleccionar_cliente()
+        if not cliente:
+            return
+        
+        mascota = self.seleccionar_mascota(cliente)
+        if not mascota:
+            return
+        
+        print(f'\n Historial de {mascota.nombre} ({mascota.especie})')
+        if not mascota.historial:
+            print("No hay citas registradas")
+            return
+
+        tabla = PrettyTable()
+        tabla.field_names = ["Fecha", "Servicio", 'Veterinario', 'Especialidad']
+        for id_, cita in enumerate(mascota.historial, start=1):
+            tabla.add_row([
+                f'{id_} - {cita.fecha.strftime('%d/%m/%Y %H:%M')}',
+                f'{cita.servicio.value}',
+                f'{cita.veterinario.nombre}',
+                f'{cita.veterinario.especialidad}'
+            ])
+            tabla.add_row([f' ',f' ',f' ',f' '])
+        print(tabla)        
 
     # Métodos auxiliares 
-
     def seleccionar_cliente(self):
         """Mostrar la lista de clientes y permitir seleccionar uno """
         if not self.veterinaria.clientes:
@@ -410,6 +436,8 @@ class Menu:
                 self.registrar_mascota()
             elif opcion == "3":
                 self.programar_cita()
+            elif opcion == "4":
+                self.consultar_historial()
             elif opcion == "6":
                 self.registrar_veterinario()    
             elif opcion == "7":
