@@ -30,39 +30,128 @@ class Veterinaria:
 
     def guardar_datos(self):
         """Serializa todos los datos a formato JSON y los guarda en archivo"""
-        datos = {
-            'clientes': [c.to_dict() for c in self.clientes],
-            'veterinarios': [v.to_dict() for v in self.veterinarios],
-            'citas': [c.to_dict() for c in self.citas]
-        }
-        with open(ARCHIVO_DATOS, 'w') as f:
-            json.dump(datos, f, indent=2)
+        try:
+            datos = {
+                'veterinarios': [],
+                'clientes': [],
+                'citas': []
+            }
+            
+            # Guardar veterinarios
+            for veterinario in self.veterinarios:
+                try:
+                    if veterinario is not None:
+                        datos['veterinarios'].append(veterinario.to_dict())
+                except Exception as e:
+                    print(f"Error al serializar veterinario: {e}")
+            
+            # Guardar clientes y sus mascotas
+            for cliente in self.clientes:
+                try:
+                    if cliente is not None:
+                        datos['clientes'].append(cliente.to_dict())
+                except Exception as e:
+                    print(f"Error al serializar cliente: {e}")
+            
+            # Guardar citas
+            for cita in self.citas:
+                try:
+                    if cita is not None:
+                        datos['citas'].append(cita.to_dict())
+                except Exception as e:
+                    print(f"Error al serializar cita: {e}")
+            
+            # Crear backup del archivo existente si existe
+            try:
+                import os
+                if os.path.exists(ARCHIVO_DATOS):
+                    import shutil
+                    backup_file = f"{ARCHIVO_DATOS}.backup"
+                    shutil.copy2(ARCHIVO_DATOS, backup_file)
+            except Exception as e:
+                print(f"No se pudo crear backup: {e}")
+            
+            # Guardar los datos en el archivo
+            with open(ARCHIVO_DATOS, 'w', encoding='utf-8') as f:
+                json.dump(datos, f, indent=2, ensure_ascii=False)
+                
+            print("Datos guardados exitosamente")
+            
+        except Exception as e:
+            print(f"Error al guardar los datos: {e}")
+            raise
 
     def cargar_datos(self):
         """Carga los datos desde el archivo JSON y reconstruye los objetos"""
         try:
-            with open(ARCHIVO_DATOS, 'r') as f:
+            with open(ARCHIVO_DATOS, 'r', encoding='utf-8') as f:
                 datos = json.load(f)
                 
-                # Reconstruir veterinarios
-                self.veterinarios = [
-                    Veterinario.from_dict(v) for v in datos.get('veterinarios', [])
-                ]
+                # Limpiar las listas actuales
+                self.veterinarios.clear()
+                self.clientes.clear()
+                self.citas.clear()
                 
-                # Reconstruir clientes y mascotas
-                self.clientes = [
-                    Cliente.from_dict(c, self.veterinarios) for c in datos.get('clientes', [])
-                ]
+                # Primero cargar veterinarios
+                for vet_data in datos.get('veterinarios', []):
+                    try:
+                        veterinario = Veterinario.from_dict(vet_data)
+                        self.veterinarios.append(veterinario)
+                    except Exception as e:
+                        print(f"Error al cargar veterinario: {e}")
                 
-                # Reconstruir citas
-                self.citas = [
-                    Cita.from_dict(c, self.clientes, self.veterinarios) 
-                    for c in datos.get('citas', [])
-                ]
+                # Luego cargar clientes y mascotas
+                for cliente_data in datos.get('clientes', []):
+                    try:
+                        cliente = Cliente.from_dict(cliente_data, self.veterinarios)
+                        self.clientes.append(cliente)
+                    except Exception as e:
+                        print(f"Error al cargar cliente: {e}")
                 
+                # Finalmente cargar citas
+                for cita_data in datos.get('citas', []):
+                    try:
+                        # Encontrar mascota y cliente
+                        mascota = None
+                        for cliente in self.clientes:
+                            for m in cliente.mascotas:
+                                if (m.nombre == cita_data['mascota_nombre'] and 
+                                    cliente.nombre == cita_data['cliente_nombre']):
+                                    mascota = m
+                                    break
+                            if mascota:
+                                break
+                                
+                        if not mascota:
+                            print(f"No se encontró la mascota {cita_data['mascota_nombre']}")
+                            continue
+                            
+                        # Encontrar veterinario
+                        veterinario = next(
+                            (v for v in self.veterinarios if v.nombre == cita_data['veterinario']),
+                            None
+                        )
+                        if not veterinario:
+                            print(f"No se encontró el veterinario {cita_data['veterinario']}")
+                            continue
+                            
+                        fecha = datetime.strptime(cita_data['fecha'], "%d/%m/%Y %H:%M")
+                        servicio = Servicio(cita_data['servicio'])
+                        
+                        cita = Cita(mascota, fecha, veterinario, servicio)
+                        mascota.agregar_cita(cita)
+                        self.citas.append(cita)
+                        
+                    except Exception as e:
+                        print(f"Error al cargar cita: {e}")
+                        
         except FileNotFoundError:
             print("No se encontró archivo de datos, iniciando con datos vacíos")
-   
+        except json.JSONDecodeError as e:
+            print(f"Error al decodificar el archivo JSON: {e}")
+        except Exception as e:
+            print(f"Error inesperado al cargar datos: {e}")
+
 # ---------- Clase para la persona   ----------------
 class Persona:
     def __init__(self, nombre: str, contacto: str, direccion: str):
@@ -96,14 +185,19 @@ class Persona:
 
 class Cliente(Persona):
     def __init__(self, nombre, contacto, direccion):
-        super().__init__(nombre, contacto, direccion)
+        # Llamar correctamente al constructor de la clase padre
+        Persona.__init__(self, nombre, contacto, direccion)
+        # Inicializar la lista de mascotas
         self.mascotas: List[Mascota] = []
-        
+
     def agregar_mascota(self, mascota):
-        self.mascotas.append(mascota)
+        """Agrega una mascota a la lista del cliente"""
+        if mascota not in self.mascotas:
+            self.mascotas.append(mascota)
+            mascota.propietario = self
 
     def __str__(self):
-        return f'Nombre: {self.nombre} - Direccion: {self.contacto}'
+        return f'Nombre: {self.nombre} - Contacto: {self.contacto}'
 
     @classmethod
     def from_dict(cls, datos: Dict, veterinarios: List):
@@ -114,19 +208,21 @@ class Cliente(Persona):
             datos['direccion']
         )
         # Reconstruir mascotas
-        cliente.mascotas = [
-            Mascota.from_dict(m, veterinarios) 
-            for m in datos.get('mascotas', [])
-        ]
-        # Asignar el propietario a cada mascota
-        for mascota in cliente.mascotas:
+        for mascota_data in datos.get('mascotas', []):
+            mascota = Mascota.from_dict(mascota_data, veterinarios)
             mascota.propietario = cliente
+            cliente.mascotas.append(mascota)
+            
         return cliente
 
     def to_dict(self):
         """Serializa el cliente incluyendo sus mascotas"""
-        datos = super().to_dict()
-        datos['mascotas'] = [m.to_dict() for m in self.mascotas]
+        datos = {
+            'nombre': self.nombre,
+            'contacto': self.contacto,
+            'direccion': self.direccion,
+            'mascotas': [m.to_dict() for m in self.mascotas]
+        }
         return datos
 
 # --------- Clase para un Veterinario ------------------
@@ -165,8 +261,18 @@ class Servicio(Enum):
         # retorna la lista se servicios
         return [s.value for s in cls]
 
+# Modificación en la clase Cita
 class Cita:
     def __init__(self, mascota, fecha: datetime, veterinario: Veterinario, servicio: Servicio):
+        if mascota is None:
+            raise ValueError("La mascota no puede ser None")
+        if veterinario is None:
+            raise ValueError("El veterinario no puede ser None")
+        if servicio is None:
+            raise ValueError("El servicio no puede ser None")
+        if fecha is None:
+            raise ValueError("La fecha no puede ser None")
+            
         self.mascota = mascota
         self.fecha = fecha
         self.veterinario = veterinario
@@ -174,6 +280,13 @@ class Cita:
 
     def to_dict(self):
         """Serializa la cita a diccionario"""
+        if self.mascota is None or self.mascota.nombre is None:
+            raise ValueError("Datos de mascota inválidos en la cita")
+        if self.mascota.propietario is None or self.mascota.propietario.nombre is None:
+            raise ValueError("Datos de propietario inválidos en la cita")
+        if self.veterinario is None or self.veterinario.nombre is None:
+            raise ValueError("Datos de veterinario inválidos en la cita")
+            
         return {
             'mascota_nombre': self.mascota.nombre,
             'cliente_nombre': self.mascota.propietario.nombre,
@@ -185,23 +298,42 @@ class Cita:
     @classmethod
     def from_dict(cls, datos: Dict, clientes: List[Cliente], veterinarios: List[Veterinario]):
         """Reconstruye una cita desde diccionario"""
+        if not datos:
+            raise ValueError("Datos de cita vacíos")
+            
         # Buscar mascota
         mascota = None
         for cliente in clientes:
             for m in cliente.mascotas:
-                if m.nombre == datos['mascota_nombre'] and cliente.nombre == datos['cliente_nombre']:
+                if m.nombre == datos.get('mascota_nombre') and cliente.nombre == datos.get('cliente_nombre'):
                     mascota = m
                     break
             if mascota:
                 break
                 
+        if mascota is None:
+            raise ValueError(f"No se encontró la mascota {datos.get('mascota_nombre')} del cliente {datos.get('cliente_nombre')}")
+                
         # Buscar veterinario
-        veterinario = next((v for v in veterinarios if v.nombre == datos['veterinario']), None)
-        fecha = datetime.strptime(datos['fecha'], "%d/%m/%Y %H:%M")
-        servicio = Servicio(datos['servicio'])        
+        veterinario = next((v for v in veterinarios if v.nombre == datos.get('veterinario')), None)
+        if veterinario is None:
+            raise ValueError(f"No se encontró el veterinario {datos.get('veterinario')}")
+            
+        try:
+            fecha = datetime.strptime(datos.get('fecha'), "%d/%m/%Y %H:%M")
+        except (ValueError, TypeError):
+            raise ValueError("Formato de fecha inválido")
+            
+        try:
+            servicio = Servicio(datos.get('servicio'))
+        except (ValueError, TypeError):
+            raise ValueError("Servicio inválido")
+            
         return cls(mascota, fecha, veterinario, servicio)
 
 # ------- Clase para la mascota --------------------
+
+# Modificar la clase Mascota para manejar mejor las referencias circulares
 class Mascota:
     def __init__(self, nombre: str, especie: str, raza: str, edad: int, propietario: Cliente = None):
         self.nombre = nombre
@@ -209,13 +341,15 @@ class Mascota:
         self.raza = raza
         self.edad = edad
         self.propietario = propietario
-        self.historial: List[Cita] = [] 
+        self.historial: List[Cita] = []
 
     def agregar_cita(self, cita: Cita):
-        self.historial.append(cita)
+        """Agrega una cita al historial de la mascota"""
+        if cita not in self.historial:
+            self.historial.append(cita)
 
     def __str__(self):
-        return f'Nombre: {self.nombre} - Especie {self.especie} - Raza {self.raza}'
+        return f'Nombre: {self.nombre} - Especie: {self.especie} - Raza: {self.raza}'
 
     @classmethod
     def from_dict(cls, datos: Dict, veterinarios: List[Veterinario]):
@@ -226,11 +360,7 @@ class Mascota:
             datos['raza'],
             datos['edad']
         )
-        # Reconstruir historial
-        mascota.historial = [
-            Cita.from_dict(c, [], veterinarios)  # Clientese cargan después
-            for c in datos.get('historial', [])
-        ]
+        # El historial se cargará después para evitar referencias circulares
         return mascota
 
     def to_dict(self):
@@ -240,9 +370,8 @@ class Mascota:
             'especie': self.especie,
             'raza': self.raza,
             'edad': self.edad,
-            'historial': [c.to_dict() for c in self.historial]
+            'historial': [c.to_dict() for c in self.historial if c is not None]
         }
-
 # ------- Menu y validación de datos ---------------
 
 class Menu:
@@ -486,47 +615,50 @@ class Menu:
     def programar_cita(self):
         """ Programar una cita """
         print("\n---- Programar Nueva Cita ----")
-        cliente = self.seleccionar_cliente()
-        if not cliente:
-            return
         
-        mascota = self.seleccionar_mascota(cliente)
-        if not mascota:
-            return
-
-        veterinario = self.seleccionar_veterinario()
-        if not veterinario:
-            return
-
-        fecha_str = input("Feha y hora (DD/MM/AAAA HH:MM): ").strip()
         try:
-            fecha = datetime.strptime(fecha_str, "%d/%m/%Y %H:%M")
-        except ValueError:
-            print('Formato de fecha inválido, Use DD/MM/AAAA HH:MM')
-            return
+            cliente = self.seleccionar_cliente()
+            if not cliente:
+                return
+            
+            mascota = self.seleccionar_mascota(cliente)
+            if not mascota:
+                return
 
-        tabla = PrettyTable()
-        # Definir columnas
-        print("\nServicios disponibles: ")
-        tabla.field_names = ["ID", "Nombre"]
-        for id_, servicio in enumerate(Servicio.listar(), start=1):
-            tabla.add_row([f'{id_}', f'{servicio}'])
-            tabla.add_row([f' ',f' '])
-        print(tabla)
+            veterinario = self.seleccionar_veterinario()
+            if not veterinario:
+                return
 
-        try:
-            seleccion = int(input("Seleccione servicio: ")) - 1
-            servicio = Servicio(Servicio.listar()[seleccion])
-        except (ValueError, IndexError):
-            print("Selección inválida")
-            return
+            fecha_str = input("Fecha y hora (DD/MM/AAAA HH:MM): ").strip()
+            try:
+                fecha = datetime.strptime(fecha_str, "%d/%m/%Y %H:%M")
+            except ValueError:
+                print('Formato de fecha inválido, Use DD/MM/AAAA HH:MM')
+                return
 
-        nueva_cita = Cita(mascota, fecha, veterinario, servicio)
-        mascota.agregar_cita(nueva_cita)
-        print(mascota)
-        self.veterinaria.citas.append(nueva_cita)
-        print('Propietario : ', mascota.propietario.nombre)
-        print(f'Cita programada para {mascota.nombre} el {fecha_str}')
+            print("\nServicios disponibles: ")
+            tabla = PrettyTable()
+            tabla.field_names = ["ID", "Nombre"]
+            for id_, servicio in enumerate(Servicio.listar(), start=1):
+                tabla.add_row([f'{id_}', f'{servicio}'])
+            print(tabla)
+
+            try:
+                seleccion = int(input("Seleccione servicio: ")) - 1
+                if seleccion < 0 or seleccion >= len(Servicio.listar()):
+                    raise ValueError("Selección fuera de rango")
+                servicio = Servicio(Servicio.listar()[seleccion])
+            except (ValueError, IndexError):
+                print("Selección inválida")
+                return
+
+            nueva_cita = Cita(mascota, fecha, veterinario, servicio)
+            mascota.agregar_cita(nueva_cita)
+            self.veterinaria.citas.append(nueva_cita)
+            print(f'Cita programada para {mascota.nombre} el {fecha_str}')
+            
+        except Exception as e:
+            print(f"Error al programar la cita: {e}")
                 
     def consultar_historial(self):
         """ Muestra el historial médico de una mascota """
