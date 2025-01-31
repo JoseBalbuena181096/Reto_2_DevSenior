@@ -1,6 +1,6 @@
 """
 Sistema de gestión de la veterinaria con persistecia de datos a JSON
-Para el reto de DevSenior code Python
+Para el reto 2 de DevSenior code Python
 
 Autor: José Ángel Balbuena Palma
 Fecha: 27/01/2025
@@ -803,7 +803,6 @@ class Menu:
                 sys.exit()
 
 # ------- función principal y utilización -----------
-
 def main():
     menu = Menu()
     menu.ejecutar()
