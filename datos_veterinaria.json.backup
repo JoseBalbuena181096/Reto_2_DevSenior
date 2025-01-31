@@ -1,30 +1,51 @@
 {
   "veterinarios": [
     {
-      "nombre": "Juan perez",
-      "contacto": "2222222",
-      "direccion": "comida",
-      "especialidad": "Medica"
+      "nombre": "Fernando Lopez",
+      "contacto": "22456780",
+      "direccion": "Atlixco Puebla",
+      "especialidad": "Cirujano"
     }
   ],
   "clientes": [
     {
       "nombre": "Jose Balbuena",
-      "contacto": "23456789",
-      "direccion": "Privadita",
+      "contacto": "2442325371",
+      "direccion": "Privada del Nardo",
       "mascotas": [
         {
-          "nombre": "leon",
-          "especie": "gato",
-          "raza": "gato",
+          "nombre": "Fiera",
+          "especie": "Gato",
+          "raza": "Pardo",
+          "edad": 2,
+          "historial": []
+        },
+        {
+          "nombre": "Piolin",
+          "especie": "Pajaro",
+          "raza": "Canario",
+          "edad": 1,
+          "historial": []
+        }
+      ]
+    },
+    {
+      "nombre": "Jorge Luis",
+      "contacto": "3432245111",
+      "direccion": "Mexico",
+      "mascotas": [
+        {
+          "nombre": "Tormenta",
+          "especie": "Caballo",
+          "raza": "Pura sangre",
           "edad": 3,
           "historial": [
             {
-              "mascota_nombre": "leon",
-              "cliente_nombre": "Jose Balbuena",
-              "fecha": "12/12/2012 12:12",
-              "veterinario": "Juan perez",
-              "servicio": "Consulta"
+              "mascota_nombre": "Tormenta",
+              "cliente_nombre": "Jorge Luis",
+              "fecha": "12/12/2025 13:15",
+              "veterinario": "Fernando Lopez",
+              "servicio": "Vacunación"
             }
           ]
         }
@@ -33,11 +54,11 @@
   ],
   "citas": [
     {
-      "mascota_nombre": "leon",
-      "cliente_nombre": "Jose Balbuena",
-      "fecha": "12/12/2012 12:12",
-      "veterinario": "Juan perez",
-      "servicio": "Consulta"
+      "mascota_nombre": "Tormenta",
+      "cliente_nombre": "Jorge Luis",
+      "fecha": "12/12/2025 13:15",
+      "veterinario": "Fernando Lopez",
+      "servicio": "Vacunación"
     }
   ]
 }

@@ -87,6 +87,7 @@ Las contribuciones son bienvenidas. Para contribuir:
 ## Autor ✒️
 
 - **José Ángel Balbuena Palma** - *Desarrollo Inicial*
+-  Ver video de funcionamiento  [AQUÍ](https://www.youtube.com/watch?v=711KrOxIIcA) 
 
 ## Licencia 📄
 
