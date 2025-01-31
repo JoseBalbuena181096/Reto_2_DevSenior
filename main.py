@@ -6,11 +6,15 @@ Autor: José Ángel Balbuena Palma
 Fecha: 27/01/2025
 """
 
-from typing import List 
+from typing import List, Dict
 from enum import Enum
 from datetime import datetime
+import json
 import sys
 from prettytable import PrettyTable
+
+# ---------- Configuración persistencia --------------
+ARCHIVO_DATOS = "datos_veterinaria.json"
 
 # ---------- Clase para la veterinaria ---------------
 class Veterinaria:
@@ -24,7 +28,41 @@ class Veterinaria:
             cls._instance.citas: List[Cita] = []
         return cls._instance
 
-     
+    def guardar_datos(self):
+        """Serializa todos los datos a formato JSON y los guarda en archivo"""
+        datos = {
+            'clientes': [c.to_dict() for c in self.clientes],
+            'veterinarios': [v.to_dict() for v in self.veterinarios],
+            'citas': [c.to_dict() for c in self.citas]
+        }
+        with open(ARCHIVO_DATOS, 'w') as f:
+            json.dump(datos, f, indent=2)
+
+    def cargar_datos(self):
+        """Carga los datos desde el archivo JSON y reconstruye los objetos"""
+        try:
+            with open(ARCHIVO_DATOS, 'r') as f:
+                datos = json.load(f)
+                
+                # Reconstruir veterinarios
+                self.veterinarios = [
+                    Veterinario.from_dict(v) for v in datos.get('veterinarios', [])
+                ]
+                
+                # Reconstruir clientes y mascotas
+                self.clientes = [
+                    Cliente.from_dict(c, self.veterinarios) for c in datos.get('clientes', [])
+                ]
+                
+                # Reconstruir citas
+                self.citas = [
+                    Cita.from_dict(c, self.clientes, self.veterinarios) 
+                    for c in datos.get('citas', [])
+                ]
+                
+        except FileNotFoundError:
+            print("No se encontró archivo de datos, iniciando con datos vacíos")
+   
 # ---------- Clase para la persona   ----------------
 class Persona:
     def __init__(self, nombre: str, contacto: str, direccion: str):
@@ -43,6 +81,14 @@ class Persona:
     @property
     def direccion(self):
         return self._direccion
+
+    def to_dict(self):
+        """ Serializr la persona a diccionario """
+        return {
+            'nombre': self._nombre,
+            'contacto': self._contacto,
+            'direccion': self._direccion
+        }
     
 # -------------- Herencias de la clase persona ----- 
 
@@ -59,13 +105,52 @@ class Cliente(Persona):
     def __str__(self):
         return f'Nombre: {self.nombre} - Direccion: {self.contacto}'
 
+    @classmethod
+    def from_dict(cls, datos: Dict, veterinarios: List):
+        """Reconstruye un cliente desde diccionario"""
+        cliente = cls(
+            datos['nombre'],
+            datos['contacto'],
+            datos['direccion']
+        )
+        # Reconstruir mascotas
+        cliente.mascotas = [
+            Mascota.from_dict(m, veterinarios) 
+            for m in datos.get('mascotas', [])
+        ]
+        # Asignar el propietario a cada mascota
+        for mascota in cliente.mascotas:
+            mascota.propietario = cliente
+        return cliente
+
+    def to_dict(self):
+        """Serializa el cliente incluyendo sus mascotas"""
+        datos = super().to_dict()
+        datos['mascotas'] = [m.to_dict() for m in self.mascotas]
+        return datos
+
+# --------- Clase para un Veterinario ------------------
 class Veterinario(Persona):
     def __init__(self, nombre: str, contacto: str, direccion: str, especialidad: str):
         super().__init__(nombre, contacto, direccion)
         self.especialidad = especialidad
     
     def __str__(self):
-        return f'Nombre: {self.nombre} - especialidad {self.especialidad}'  
+        return f'Nombre: {self.nombre} - especialidad {self.especialidad}'
+
+    @classmethod
+    def from_dict(cls, datos: Dict):
+        return cls(
+            datos['nombre'],
+            datos['contacto'],
+            datos['direccion'],
+            datos['especialidad']
+        )
+
+    def to_dict(self):
+        datos = super().to_dict()
+        datos['especialidad'] = self.especialidad
+        return datos  
 
 # ------- Clases para el servicio y citas ----------
 
@@ -81,12 +166,40 @@ class Servicio(Enum):
         return [s.value for s in cls]
 
 class Cita:
-    def __init__(self, mascota: 'Mascota', fecha: datetime, veterinario: Veterinario, servicio: Servicio):
+    def __init__(self, mascota, fecha: datetime, veterinario: Veterinario, servicio: Servicio):
         self.mascota = mascota
         self.fecha = fecha
         self.veterinario = veterinario
         self.servicio = servicio
 
+    def to_dict(self):
+        """Serializa la cita a diccionario"""
+        return {
+            'mascota_nombre': self.mascota.nombre,
+            'cliente_nombre': self.mascota.propietario.nombre,
+            'fecha': self.fecha.strftime("%d/%m/%Y %H:%M"),
+            'veterinario': self.veterinario.nombre,
+            'servicio': self.servicio.value
+        }
+
+    @classmethod
+    def from_dict(cls, datos: Dict, clientes: List[Cliente], veterinarios: List[Veterinario]):
+        """Reconstruye una cita desde diccionario"""
+        # Buscar mascota
+        mascota = None
+        for cliente in clientes:
+            for m in cliente.mascotas:
+                if m.nombre == datos['mascota_nombre'] and cliente.nombre == datos['cliente_nombre']:
+                    mascota = m
+                    break
+            if mascota:
+                break
+                
+        # Buscar veterinario
+        veterinario = next((v for v in veterinarios if v.nombre == datos['veterinario']), None)
+        fecha = datetime.strptime(datos['fecha'], "%d/%m/%Y %H:%M")
+        servicio = Servicio(datos['servicio'])        
+        return cls(mascota, fecha, veterinario, servicio)
 
 # ------- Clase para la mascota --------------------
 class Mascota:
@@ -95,7 +208,7 @@ class Mascota:
         self.especie = especie
         self.raza = raza
         self.edad = edad
-        self. propietario = propietario
+        self.propietario = propietario
         self.historial: List[Cita] = [] 
 
     def agregar_cita(self, cita: Cita):
@@ -104,11 +217,38 @@ class Mascota:
     def __str__(self):
         return f'Nombre: {self.nombre} - Especie {self.especie} - Raza {self.raza}'
 
+    @classmethod
+    def from_dict(cls, datos: Dict, veterinarios: List[Veterinario]):
+        """Reconstruye mascota desde diccionario"""
+        mascota = cls(
+            datos['nombre'],
+            datos['especie'],
+            datos['raza'],
+            datos['edad']
+        )
+        # Reconstruir historial
+        mascota.historial = [
+            Cita.from_dict(c, [], veterinarios)  # Clientese cargan después
+            for c in datos.get('historial', [])
+        ]
+        return mascota
+
+    def to_dict(self):
+        """Serializa la mascota incluyendo su historial"""
+        return {
+            'nombre': self.nombre,
+            'especie': self.especie,
+            'raza': self.raza,
+            'edad': self.edad,
+            'historial': [c.to_dict() for c in self.historial]
+        }
+
 # ------- Menu y validación de datos ---------------
 
 class Menu:
     def __init__(self):
         self.veterinaria = Veterinaria()
+        self.veterinaria.cargar_datos()
         self.opciones_validas = ["1", "2", "3", "4", "5", "6", "7"]
 
     def mostrar_menu(self):
@@ -128,6 +268,7 @@ class Menu:
             entrada = input("Seleccione una opción del menu: ").strip()
             try: # Verificar si es numerica
                 if not entrada.isdigit():
+                    self.mostrar_menu()
                     raise Exception("La entrada no es un número válido.")
                 if  entrada in self.opciones_validas:
                     return entrada
@@ -274,8 +415,8 @@ class Menu:
 
         print("\n --- Registra una nueva mascota ---")
         # Validaciones
-        cliente = self.seleccionar_cliente()
-        if not cliente:
+        cliente_mascota = self.seleccionar_cliente()
+        if not cliente_mascota:
             return 
     
         i = 0    
@@ -338,8 +479,8 @@ class Menu:
                 print("Demasiados intentos regresando... ")
                 return
 
-        nueva_mascota = Mascota(nombre, especie, raza, edad, cliente)
-        cliente.agregar_mascota(nueva_mascota)
+        nueva_mascota = Mascota(nombre, especie, raza, edad, cliente_mascota)
+        cliente_mascota.agregar_mascota(nueva_mascota)
         print(f'Mascota {nombre} registrada exitosamente! ')
 
     def programar_cita(self):
@@ -382,7 +523,9 @@ class Menu:
 
         nueva_cita = Cita(mascota, fecha, veterinario, servicio)
         mascota.agregar_cita(nueva_cita)
+        print(mascota)
         self.veterinaria.citas.append(nueva_cita)
+        print('Propietario : ', mascota.propietario.nombre)
         print(f'Cita programada para {mascota.nombre} el {fecha_str}')
                 
     def consultar_historial(self):
@@ -523,6 +666,7 @@ class Menu:
             elif opcion == "6":
                 self.registrar_veterinario()    
             elif opcion == "7":
+                self.veterinaria.guardar_datos()
                 print("Saliendo del sistema")
                 sys.exit()
 

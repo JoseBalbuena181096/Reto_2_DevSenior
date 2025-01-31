@@ -1,0 +1,71 @@
+{
+  "clientes": [
+    {
+      "nombre": "Jose Angel Balbuena Palma",
+      "contacto": "2442325371",
+      "direccion": "Privada del Nardo",
+      "mascotas": [
+        {
+          "nombre": "Carlitos Mayer",
+          "especie": "Dragon",
+          "raza": "Comodo",
+          "edad": 2,
+          "historial": [
+            {
+              "mascota_nombre": "Carlitos Mayer",
+              "cliente_nombre": "Jose Angel Balbuena Palma",
+              "fecha": "12/11/2025 12:00",
+              "veterinario": "Juan Carlos",
+              "servicio": "Consulta"
+            }
+          ]
+        },
+        {
+          "nombre": "Besti",
+          "especie": "Gato",
+          "raza": "Egipcio",
+          "edad": 4,
+          "historial": []
+        }
+      ]
+    },
+    {
+      "nombre": "Luis Manuel",
+      "contacto": "234223445",
+      "direccion": "Ciudad Modelo",
+      "mascotas": [
+        {
+          "nombre": "Fifi",
+          "especie": "Perrito",
+          "raza": "Callejero",
+          "edad": 6,
+          "historial": []
+        },
+        {
+          "nombre": "Luis Marcos",
+          "especie": "Luinw",
+          "raza": "ljhjkl",
+          "edad": 3,
+          "historial": []
+        }
+      ]
+    }
+  ],
+  "veterinarios": [
+    {
+      "nombre": "Juan Carlos",
+      "contacto": "3456789",
+      "direccion": "Privadita",
+      "especialidad": "Cirujano"
+    }
+  ],
+  "citas": [
+    {
+      "mascota_nombre": "Carlitos Mayer",
+      "cliente_nombre": "Jose Angel Balbuena Palma",
+      "fecha": "12/11/2025 12:00",
+      "veterinario": "Juan Carlos",
+      "servicio": "Consulta"
+    }
+  ]
+}
