@@ -1,0 +1,43 @@
+{
+  "veterinarios": [
+    {
+      "nombre": "Juan perez",
+      "contacto": "2222222",
+      "direccion": "comida",
+      "especialidad": "Medica"
+    }
+  ],
+  "clientes": [
+    {
+      "nombre": "Jose Balbuena",
+      "contacto": "23456789",
+      "direccion": "Privadita",
+      "mascotas": [
+        {
+          "nombre": "leon",
+          "especie": "gato",
+          "raza": "gato",
+          "edad": 3,
+          "historial": [
+            {
+              "mascota_nombre": "leon",
+              "cliente_nombre": "Jose Balbuena",
+              "fecha": "12/12/2012 12:12",
+              "veterinario": "Juan perez",
+              "servicio": "Consulta"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "citas": [
+    {
+      "mascota_nombre": "leon",
+      "cliente_nombre": "Jose Balbuena",
+      "fecha": "12/12/2012 12:12",
+      "veterinario": "Juan perez",
+      "servicio": "Consulta"
+    }
+  ]
+}
